@@ -53,12 +53,7 @@ Formatos de tarjeta: 26 bits (número = bits 9..24), 35 bits Corporate 1000 (bit
 
 Las conexiones del lector y del reloj son las mismas de HID_Reloj.
 
-### Cargar el firmware
 
-1. Desconectar el lector y el reloj de la placa.
-2. Conectar el USBtiny al ICSP y ejecutar `Cargar Multi_Lector.bat`.
-
-El .bat usa `hfuse 0xD8` (sección de arranque de 4 KB), distinto del 0xDA de HID_Reloj: sin ese fusible no arranca el modo tarjetas. Graba con `-B 2` para ir más rápido y mantiene la verificación.
 
 ### Compilar desde el código
 
