@@ -32,3 +32,38 @@ Formatos: 26 bits (H10301, número = bits 9..24) y 35 bits (HID Corporate 1000, 
 ### Compilar desde el código
 
 `firmware/HID_Reloj/HID_Reloj.ino` se compila con el Arduino IDE (placa Arduino Nano / ATmega328P) o con avr-gcc. Después hay que rellenar el .hex a múltiplo de 128 bytes antes de grabarlo.
+
+## Multi_Lector (cédulas + tarjetas en un solo archivo)
+
+Un único `Multi_Lector.hex` que contiene el firmware original de cédulas (`firmwarev02`) y el lector de tarjetas HID. El switch 1 elige el modo al encender la placa.
+
+### DIP switch
+
+| Switch 1 | Switch 2 | Switch 3 | Función |
+|---|---|---|---|
+| OFF | - | - | Lector de cédulas (firmware original) |
+| ON | OFF | OFF | Envía el número impreso de la tarjeta |
+| ON | ON | OFF | Envía la cantidad de bits de la tarjeta |
+| ON | OFF | ON | Diagnóstico: envía los bits crudos en 3 números (1xxxxx = bits 0-15, 2xxxxx = bits 16-31, 3xxxxx = bits 32-39 y cantidad de bits) |
+| ON | ON | ON | Prueba de enlace: envía 123456 cada 5 s |
+
+El cambio entre cédulas y tarjetas se aplica al reiniciar la placa; los switch 2 y 3 se leen en cada lectura.
+
+Formatos de tarjeta: 26 bits (número = bits 9..24), 35 bits Corporate 1000 (bits 14..33) y 36 bits BCD (dígitos en bits 12..31, ej. 0x79700799A → 00799). Otros largos envían sus 24 bits bajos.
+
+Las conexiones del lector y del reloj son las mismas de HID_Reloj.
+
+### Cargar el firmware
+
+1. Desconectar el lector y el reloj de la placa.
+2. Conectar el USBtiny al ICSP y ejecutar `Cargar Multi_Lector.bat`.
+
+El .bat usa `hfuse 0xD8` (sección de arranque de 4 KB), distinto del 0xDA de HID_Reloj: sin ese fusible no arranca el modo tarjetas. Graba con `-B 2` para ir más rápido y mantiene la verificación.
+
+### Compilar desde el código
+
+`firmware/Multi_Lector/Multi_Lector.ino` se enlaza en la dirección 0x7000 (`-Wl,--section-start=.text=0x7000`) y debe ocupar menos de 4096 bytes. Luego `combinar.py` lo junta con `firmwarev02.hex` y rellena cada parte hasta completar páginas de 128 bytes:
+
+```
+python3 firmware/Multi_Lector/combinar.py firmwarev02.hex Multi_Lector_0x7000.hex Multi_Lector.hex
+```
